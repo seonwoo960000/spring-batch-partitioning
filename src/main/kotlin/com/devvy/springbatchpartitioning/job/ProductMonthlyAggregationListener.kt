@@ -27,7 +27,11 @@ open class ProductMonthlyAggregationListener(
     }
 
     override fun afterStep(stepExecution: StepExecution): ExitStatus? {
-        productMonthlyRepository.save(stepExecution.executionContext["productMonthly"]!! as ProductMonthly)
+        if (stepExecution.exitStatus.equals(ExitStatus.COMPLETED)){
+            productMonthlyRepository.save(stepExecution.executionContext["productMonthly"]!! as ProductMonthly)
+        } else {
+            throw IllegalStateException("Step execution failed")
+        }
         return super.afterStep(stepExecution)
     }
 }

@@ -1,26 +1,18 @@
 package com.devvy.springbatchpartitioning.job
 
 import com.devvy.springbatchpartitioning.entity.Product
-import com.devvy.springbatchpartitioning.entity.ProductMonthly
 import com.devvy.springbatchpartitioning.repository.ProductMonthlyRepository
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
-import org.springframework.batch.core.StepExecution
-import org.springframework.batch.core.annotation.AfterStep
-import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
-import org.springframework.batch.core.scope.context.StepSynchronizationManager
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.database.JpaPagingItemReader
-import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder
 import org.springframework.batch.item.support.AbstractItemStreamItemWriter
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -32,6 +24,8 @@ class ProductMonthlyAggregationJobConfiguration(
     private val platformTransactionManager: PlatformTransactionManager,
     private val entityManagerFactory: EntityManagerFactory,
     private val productMonthlyRepository: ProductMonthlyRepository,
+    @Qualifier("productMonthlyAggregationJobParameters")
+    private val jobParameters: ProductMonthlyAggregationJobParameters,
 ) {
 
     @Bean("productMonthlyAggregationJob")
@@ -61,27 +55,9 @@ class ProductMonthlyAggregationJobConfiguration(
 
     @StepScope
     @Bean("productMonthlyAggregationReader")
-    fun productMonthlyAggregationReader(
-        @Value("#{jobParameters['startDate']}") startDate: String,
-        @Value("#{jobParameters['endDate']}") endDate: String
-    ): JpaPagingItemReader<Product> {
-        val params = hashMapOf<String, Any>(
-            "startDate" to startDate,
-            "endDate" to endDate
-        )
-
-        return JpaPagingItemReaderBuilder<Product>()
-            .name("productMonthlyAggregationReader")
-            .entityManagerFactory(entityManagerFactory)
-            .queryString(
-                """
-                SELECT p 
-                FROM Product p 
-                WHERE p.date BETWEEN :startDate AND :endDate
-                """
-            )
-            .parameterValues(params)
-            .build()
+    fun productMonthlyAggregationReader(): JpaPagingItemReader<Product> {
+        return ProductMonthlyAggregationReaderFactory(entityManagerFactory, jobParameters)
+            .productMonthlyAggregationReader()
     }
 
     @StepScope
@@ -94,5 +70,14 @@ class ProductMonthlyAggregationJobConfiguration(
     @Bean("productMonthlyAggregationListener")
     fun productMonthlyAggregationListener(): ProductMonthlyAggregationListener {
         return ProductMonthlyAggregationListener(productMonthlyRepository)
+    }
+
+    @StepScope
+    @Bean("productMonthlyPartitioner")
+    fun productMonthlyPartitioner(
+        @Qualifier("productMonthlyAggregationJobParameters")
+        jobParameters: ProductMonthlyAggregationJobParameters
+    ): ProductMonthlyAggregationPartitioner {
+        return ProductMonthlyAggregationPartitioner(jobParameters)
     }
 }
