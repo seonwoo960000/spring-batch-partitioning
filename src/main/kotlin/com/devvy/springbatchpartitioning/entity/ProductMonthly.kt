@@ -7,13 +7,13 @@ import jakarta.persistence.Table
 import java.io.Serializable
 import java.util.*
 
-@Table(name = "product_monthly")
 @Entity
+@Table(name = "product_monthly")
 class ProductMonthly(
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "binary(16)")
     var id: UUID = UUID.randomUUID(),
-    @Column(name = "month", nullable = false)
+    @Column(name = "`month`", nullable = false)
     val month: String,
     @Column(name = "price", nullable = false)
     var price: Long = 0,

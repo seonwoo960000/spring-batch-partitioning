@@ -2,9 +2,7 @@ package com.devvy.springbatchpartitioning.job
 
 import org.springframework.batch.core.partition.support.Partitioner
 import org.springframework.batch.item.ExecutionContext
-import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
 
 open class ProductMonthlyAggregationPartitioner(
     private val jobParameters: ProductMonthlyAggregationJobParameters
@@ -22,9 +20,8 @@ open class ProductMonthlyAggregationPartitioner(
     }
 
     fun partitionDates(): List<Pair<String, String>> {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val start = LocalDate.parse(jobParameters.startDate, formatter)
-        val end = LocalDate.parse(jobParameters.endDate, formatter)
+        val start = jobParameters.startDate
+        val end = jobParameters.endDate
 
         var current = start
         var partitionedDates = mutableListOf<Pair<String, String>>()

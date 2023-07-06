@@ -1,0 +1,25 @@
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true # data.sql script executes before Hibernate initialization, so we should defer it
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      auto-commit: false
+      connection-test-query: SELECT 1
+      maximum-pool-size: 50
+  batch:
+    jdbc:
+      initialize-schema: always
+
+logging:
+  level:
+    org.hibernate:
+      sql: TRACE
+      type: DEBUG

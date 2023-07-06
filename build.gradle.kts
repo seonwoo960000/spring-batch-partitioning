@@ -20,13 +20,14 @@ repositories {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.4")
     implementation("org.springframework.boot:spring-boot-starter-batch")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("mysql:mysql-connector-java:8.0.28")
     implementation("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("com.h2database:h2")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")
 }

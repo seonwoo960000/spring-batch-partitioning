@@ -13,6 +13,7 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.item.database.JpaPagingItemReader
 import org.springframework.batch.item.support.AbstractItemStreamItemWriter
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
@@ -27,6 +28,9 @@ class ProductMonthlyAggregationJobConfiguration(
     @Qualifier("productMonthlyAggregationJobParameters")
     private val jobParameters: ProductMonthlyAggregationJobParameters,
 ) {
+
+    @Value("\${spring.batch.job.chunk-size:1000}")
+    private val chunkSize: Int = 1000
 
     @Bean("productMonthlyAggregationJob")
     fun productMonthlyAggregationJob(
@@ -46,7 +50,7 @@ class ProductMonthlyAggregationJobConfiguration(
         @Qualifier("productMonthlyAggregationListener") productMonthlyAggregationListener: ProductMonthlyAggregationListener
     ): Step {
         return StepBuilder("productMonthlyAggregationStep", jobRepository)
-            .chunk<Product, Product>(100, platformTransactionManager)
+            .chunk<Product, Product>(chunkSize, platformTransactionManager)
             .reader(productMonthlyAggregationReader)
             .writer(productMonthlyAggregationWriter)
             .listener(productMonthlyAggregationListener)
@@ -56,7 +60,7 @@ class ProductMonthlyAggregationJobConfiguration(
     @StepScope
     @Bean("productMonthlyAggregationReader")
     fun productMonthlyAggregationReader(): JpaPagingItemReader<Product> {
-        return ProductMonthlyAggregationReaderFactory(entityManagerFactory, jobParameters)
+        return ProductMonthlyAggregationReaderFactory(entityManagerFactory, jobParameters, chunkSize)
             .productMonthlyAggregationReader()
     }
 

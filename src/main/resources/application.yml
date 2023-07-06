@@ -18,3 +18,4 @@ spring:
       name: productMonthlyAggregationJob
     jdbc:
       initialize-schema: always
+

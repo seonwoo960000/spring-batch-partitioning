@@ -2,17 +2,19 @@ package com.devvy.springbatchpartitioning.job
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ProductMonthlyAggregationPartitionerTest {
 
-
     @Test
     fun testPartitionDates() {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val result = ProductMonthlyAggregationPartitioner(
             ProductMonthlyAggregationJobParameters(
-            startDate = "2023-01-01",
-            endDate = "2023-12-31"
-        )
+                startDate = LocalDate.parse("2023-01-01", formatter),
+                endDate = LocalDate.parse("2023-12-31", formatter)
+            )
         ).partitionDates()
         assertEquals(12, result.size)
         assertEquals("2023-01-01", result[0].first)

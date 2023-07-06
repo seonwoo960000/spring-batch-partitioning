@@ -20,4 +20,8 @@ class Product(
     override fun toString(): String {
         return "Product(id=$id, date='$date', price=$price)"
     }
+
+    fun month(): String {
+        return date.substring(0, 7)
+    }
 }
