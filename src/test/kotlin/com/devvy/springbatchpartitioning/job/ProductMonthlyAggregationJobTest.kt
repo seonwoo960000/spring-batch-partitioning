@@ -17,11 +17,13 @@ import org.springframework.batch.test.context.SpringBatchTest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.jdbc.Sql
 import java.time.LocalDate
 
 @SpringBootTest
 @SpringBatchTest
+@TestPropertySource(properties = ["spring.batch.job.chunk-size=10", "spring.batch.job.pool-size=3"])
 @Sql("classpath:/sql/dml.sql")
 class ProductMonthlyAggregationJobTest(
     @Qualifier("productMonthlyAggregationJob")
@@ -44,7 +46,7 @@ class ProductMonthlyAggregationJobTest(
     }
 
     @Test
-    fun `productMonthlyAggregationJob test`() {
+    fun `productMonthlyAggregationJob test with default settings`() {
         val jobParameters = JobParametersBuilder()
             .addLocalDate(
                 JobParametersKey.START_DATE,

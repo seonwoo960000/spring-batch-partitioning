@@ -24,7 +24,7 @@ open class ProductMonthlyAggregationWriter : AbstractItemStreamItemWriter<Produc
 
                 products.forEach { productMonthly.add(it) }
 
-                println("Writer -----> yearMonth: $yearMonth")
+                println("Writer ----> yearMonth: $yearMonth")
             }
 
         productMonthlies.keys.forEach {

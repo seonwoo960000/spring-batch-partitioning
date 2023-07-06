@@ -6,7 +6,7 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true # data.sql script executes before Hibernate initialization, so we should defer it
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -21,5 +21,4 @@ spring:
 logging:
   level:
     org.hibernate:
-      sql: TRACE
-      type: DEBUG
+      type.descriptor.sql: TRACE
