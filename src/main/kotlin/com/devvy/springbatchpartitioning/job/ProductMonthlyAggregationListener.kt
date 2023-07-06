@@ -2,10 +2,10 @@ package com.devvy.springbatchpartitioning.job
 
 import com.devvy.springbatchpartitioning.entity.ProductMonthly
 import com.devvy.springbatchpartitioning.repository.ProductMonthlyRepository
+import mu.KotlinLogging
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.StepExecutionListener
-import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
@@ -17,11 +17,15 @@ open class ProductMonthlyAggregationListener(
 
     override fun beforeStep(stepExecution: StepExecution) {
         startMonth =
-            stepExecution.jobExecution.jobParameters.parameters[ProductMonthlyAggregationJobParameters.START_DATE]?.value.toString().substring(0, 7)
+            stepExecution.executionContext[JobParametersKey.START_DATE].toString().substring(0, 7)
         endMonth =
-            stepExecution.jobExecution.jobParameters.parameters[ProductMonthlyAggregationJobParameters.END_DATE]?.value.toString().substring(0, 7)
+            stepExecution.executionContext[JobParametersKey.END_DATE].toString().substring(0, 7)
         if (startMonth == null || endMonth == null) {
             throw IllegalArgumentException("Null month")
+        }
+
+        if (startMonth != endMonth) {
+            throw IllegalArgumentException("Start month and end month are not equal. startMonth: $startMonth, endMonth: $endMonth")
         }
 
         ProductMonthlyKeyUtils.productMonthlyKeys(startMonth, endMonth)
