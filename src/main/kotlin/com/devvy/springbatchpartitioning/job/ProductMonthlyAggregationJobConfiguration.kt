@@ -47,18 +47,6 @@ class ProductMonthlyAggregationJobConfiguration(
             .build()
     }
 
-//    @Bean("productMonthlyAggregationPartitionHandler")
-//    fun productMonthlyAggregationPartitionHandler(
-//        @Qualifier("productMonthlyAggregationStep") productMonthlyAggregationStep: Step,
-//        @Qualifier("productMonthlyAggregationTaskPool") taskExecutor: TaskExecutor
-//    ): TaskExecutorPartitionHandler {
-//        val partitionHandler = TaskExecutorPartitionHandler()
-//        partitionHandler.step = productMonthlyAggregationStep
-//        partitionHandler.setTaskExecutor(taskExecutor)
-//        partitionHandler.gridSize = poolSize
-//        return partitionHandler
-//    }
-
     @Bean("productMonthlyAggregationTaskPool")
     fun executor(): TaskExecutor {
         val executor = ThreadPoolTaskExecutor()
@@ -73,7 +61,6 @@ class ProductMonthlyAggregationJobConfiguration(
     @Bean("productMonthlyAggregationStep.manager")
     fun productMonthlyAggregationStepManager(
         @Qualifier("productMonthlyAggregationPartitioner") partitioner: ProductMonthlyAggregationPartitioner,
-//        @Qualifier("productMonthlyAggregationPartitionHandler") partitionHandler: TaskExecutorPartitionHandler,
         @Qualifier("productMonthlyAggregationReader") productMonthlyAggregationReader: JpaPagingItemReader<Product>,
         @Qualifier("productMonthlyAggregationWriter") productMonthlyAggregationWriter: AbstractItemStreamItemWriter<Product>,
         @Qualifier("productMonthlyAggregationListener") productMonthlyAggregationListener: ProductMonthlyAggregationListener,
@@ -89,7 +76,6 @@ class ProductMonthlyAggregationJobConfiguration(
                     .listener(productMonthlyAggregationListener)
                     .build()
             )
-//            .partitionHandler(partitionHandler)
             .taskExecutor(executor)
             .build()
     }
