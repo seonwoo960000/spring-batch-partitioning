@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class SpringBatchPartitioningApplication
 
 fun main(args: Array<String>) {
-    runApplication<SpringBatchPartitioningApplication>(*args)
+  runApplication<SpringBatchPartitioningApplication>(*args)
 }
