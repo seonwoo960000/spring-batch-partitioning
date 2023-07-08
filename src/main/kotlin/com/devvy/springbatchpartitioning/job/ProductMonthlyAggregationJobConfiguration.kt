@@ -7,10 +7,10 @@ import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.item.database.JpaPagingItemReader
-import org.springframework.batch.item.support.AbstractItemStreamItemWriter
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -42,7 +42,7 @@ class ProductMonthlyAggregationJobConfiguration(
         @Qualifier("productMonthlyAggregationStep.manager") productMonthlyAggregationStepManager: Step
     ): Job {
         return JobBuilder("productMonthlyAggregationJob", jobRepository)
-            .incrementer(CustomRunIdIncrementer())
+//            .incrementer(CustomRunIdIncrementer())
             .start(productMonthlyAggregationStepManager)
             .build()
     }
@@ -62,21 +62,43 @@ class ProductMonthlyAggregationJobConfiguration(
     fun productMonthlyAggregationStepManager(
         @Qualifier("productMonthlyAggregationPartitioner") partitioner: ProductMonthlyAggregationPartitioner,
         @Qualifier("productMonthlyAggregationReader") productMonthlyAggregationReader: JpaPagingItemReader<Product>,
-        @Qualifier("productMonthlyAggregationWriter") productMonthlyAggregationWriter: AbstractItemStreamItemWriter<Product>,
+        @Qualifier("productMonthlyAggregationWriter") productMonthlyAggregationWriter: ProductMonthlyAggregationWriter,
         @Qualifier("productMonthlyAggregationListener") productMonthlyAggregationListener: ProductMonthlyAggregationListener,
         @Qualifier("productMonthlyAggregationTaskPool") executor: TaskExecutor
     ): Step {
+        val productMonthlyAggregationStep = productMonthlyAggregationStep(
+            productMonthlyAggregationReader,
+            productMonthlyAggregationWriter,
+            productMonthlyAggregationListener
+        )
+        val partitionHandler = productMonthlyAggregationPartitionHandler(productMonthlyAggregationStep)
         return StepBuilder("productMonthlyAggregationStep.manager", jobRepository)
             .partitioner("productMonthlyAggregationStep", partitioner)
-            .step(
-                StepBuilder("productMonthlyAggregationStep", jobRepository)
-                    .chunk<Product, Product>(chunkSize.toInt(), platformTransactionManager)
-                    .reader(productMonthlyAggregationReader)
-                    .writer(productMonthlyAggregationWriter)
-                    .listener(productMonthlyAggregationListener)
-                    .build()
-            )
-            .taskExecutor(executor)
+            .step(productMonthlyAggregationStep)
+            .partitionHandler(partitionHandler)
+            .build()
+    }
+
+    fun productMonthlyAggregationPartitionHandler(
+        productMonthlyAggregationStep: Step,
+    ): TaskExecutorPartitionHandler {
+        val partitionHandler = TaskExecutorPartitionHandler()
+        partitionHandler.setTaskExecutor(executor())
+        partitionHandler.step = productMonthlyAggregationStep
+        partitionHandler.gridSize = poolSize.toInt()
+        return partitionHandler
+    }
+
+    fun productMonthlyAggregationStep(
+        productMonthlyAggregationReader: JpaPagingItemReader<Product>,
+        productMonthlyAggregationWriter: ProductMonthlyAggregationWriter,
+        productMonthlyAggregationListener: ProductMonthlyAggregationListener,
+    ): Step {
+        return StepBuilder("productMonthlyAggregationStep", jobRepository)
+            .chunk<Product, Product>(chunkSize.toInt(), platformTransactionManager)
+            .reader(productMonthlyAggregationReader)
+            .writer(productMonthlyAggregationWriter)
+            .listener(productMonthlyAggregationListener)
             .build()
     }
 
@@ -88,13 +110,18 @@ class ProductMonthlyAggregationJobConfiguration(
         @Value("#{stepExecutionContext[${JobParametersKey.END_DATE}]}")
         endDate: LocalDate
     ): JpaPagingItemReader<Product> {
-        return ProductMonthlyAggregationReaderFactory(entityManagerFactory, startDate, endDate, chunkSize.toInt())
+        return ProductMonthlyAggregationReaderFactory(
+            entityManagerFactory,
+            startDate,
+            endDate,
+            chunkSize.toInt()
+        )
             .productMonthlyAggregationReader()
     }
 
     @StepScope
     @Bean("productMonthlyAggregationWriter")
-    fun productMonthlyAggregationWriter(): AbstractItemStreamItemWriter<Product> {
+    fun productMonthlyAggregationWriter(): ProductMonthlyAggregationWriter {
         return ProductMonthlyAggregationWriter()
     }
 
