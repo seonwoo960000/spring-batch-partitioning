@@ -8,7 +8,6 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.builder.JobBuilder
-import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.item.database.JpaPagingItemReader
@@ -16,10 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.task.TaskExecutor
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
-import java.lang.Boolean
 import java.time.LocalDate
 import java.util.*
 
@@ -40,62 +36,21 @@ class ProductMonthlyAggregationJobConfiguration(
 
     @Bean("productMonthlyAggregationJob")
     fun productMonthlyAggregationJob(
-        @Qualifier("productMonthlyAggregationStep.manager") productMonthlyAggregationStepManager: Step
+        @Qualifier("productMonthlyAggregationStep") productMonthlyAggregationStep: Step
     ): Job {
         return JobBuilder("productMonthlyAggregationJob", jobRepository)
-            .start(productMonthlyAggregationStepManager)
+            .start(productMonthlyAggregationStep)
             // comment below code to prevent running jobs with same jobParameters multiple times
             .incrementer(UniqueRunIdIncrementer())
             .build()
     }
 
-    @Bean("productMonthlyAggregationTaskPool")
-    fun executor(): TaskExecutor {
-        val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = poolSize.toInt()
-        executor.maxPoolSize = poolSize.toInt()
-        executor.setThreadNamePrefix("partition-thread")
-        executor.setWaitForTasksToCompleteOnShutdown(Boolean.TRUE)
-        executor.initialize()
-        return executor
-    }
-
     @JobScope
-    @Bean("productMonthlyAggregationStep.manager")
-    fun productMonthlyAggregationStepManager(
-        @Qualifier("productMonthlyAggregationPartitioner") partitioner: ProductMonthlyAggregationPartitioner,
+    @Bean("productMonthlyAggregationStep")
+    fun productMonthlyAggregationStep(
         @Qualifier("productMonthlyAggregationReader") productMonthlyAggregationReader: JpaPagingItemReader<Product>,
         @Qualifier("productMonthlyAggregationWriter") productMonthlyAggregationWriter: ProductMonthlyAggregationWriter,
         @Qualifier("productMonthlyAggregationListener") productMonthlyAggregationListener: ProductMonthlyAggregationListener,
-        @Qualifier("productMonthlyAggregationTaskPool") executor: TaskExecutor
-    ): Step {
-        val productMonthlyAggregationStep = productMonthlyAggregationStep(
-            productMonthlyAggregationReader,
-            productMonthlyAggregationWriter,
-            productMonthlyAggregationListener
-        )
-        val partitionHandler = productMonthlyAggregationPartitionHandler(productMonthlyAggregationStep)
-        return StepBuilder("productMonthlyAggregationStep.manager", jobRepository)
-            .partitioner("productMonthlyAggregationStep", partitioner)
-            .step(productMonthlyAggregationStep)
-            .partitionHandler(partitionHandler)
-            .build()
-    }
-
-    fun productMonthlyAggregationPartitionHandler(
-        productMonthlyAggregationStep: Step,
-    ): TaskExecutorPartitionHandler {
-        val partitionHandler = TaskExecutorPartitionHandler()
-        partitionHandler.setTaskExecutor(executor())
-        partitionHandler.step = productMonthlyAggregationStep
-        partitionHandler.gridSize = poolSize.toInt()
-        return partitionHandler
-    }
-
-    fun productMonthlyAggregationStep(
-        productMonthlyAggregationReader: JpaPagingItemReader<Product>,
-        productMonthlyAggregationWriter: ProductMonthlyAggregationWriter,
-        productMonthlyAggregationListener: ProductMonthlyAggregationListener,
     ): Step {
         return StepBuilder("productMonthlyAggregationStep", jobRepository)
             .chunk<Product, Product>(chunkSize.toInt(), platformTransactionManager)
@@ -108,15 +63,15 @@ class ProductMonthlyAggregationJobConfiguration(
     @StepScope
     @Bean("productMonthlyAggregationReader")
     fun productMonthlyAggregationReader(
-        @Value("#{stepExecutionContext[${Common.STEP_EXECUTION_START_DATE}]}")
-        stepExecutionStartDate: LocalDate,
-        @Value("#{stepExecutionContext[${Common.STEP_EXECUTION_END_DATE}]}")
-        stepExecutionEndDate: LocalDate
+        @Value("#{jobParameters[${Common.JOB_PARAMETERS_START_DATE}]}")
+        startDate: LocalDate,
+        @Value("#{jobParameters[${Common.JOB_PARAMETERS_END_DATE}]}")
+        endDate: LocalDate
     ): JpaPagingItemReader<Product> {
         return ProductMonthlyAggregationReaderFactory(
             entityManagerFactory,
-            stepExecutionStartDate,
-            stepExecutionEndDate,
+            startDate,
+            endDate,
             chunkSize.toInt()
         )
             .productMonthlyAggregationReader()
@@ -132,16 +87,5 @@ class ProductMonthlyAggregationJobConfiguration(
     @Bean("productMonthlyAggregationListener")
     fun productMonthlyAggregationListener(): ProductMonthlyAggregationListener {
         return ProductMonthlyAggregationListener(productMonthlyRepository)
-    }
-
-    @JobScope
-    @Bean("productMonthlyAggregationPartitioner")
-    fun productMonthlyAggregationPartitioner(
-        @Value("#{jobParameters[${Common.JOB_PARAMETERS_START_DATE}]}")
-        startDate: LocalDate,
-        @Value("#{jobParameters[${Common.JOB_PARAMETERS_END_DATE}]}")
-        endDate: LocalDate
-    ): ProductMonthlyAggregationPartitioner {
-        return ProductMonthlyAggregationPartitioner(startDate, endDate)
     }
 }
