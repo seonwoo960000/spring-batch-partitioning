@@ -49,11 +49,11 @@ class ProductMonthlyAggregationJobTest(
     fun `productMonthlyAggregationJob test with default settings`() {
         val jobParameters = JobParametersBuilder()
             .addLocalDate(
-                JobParametersKey.START_DATE,
+                Common.JOB_PARAMETERS_START_DATE,
                 LocalDate.parse("2023-01-01")
             )
             .addLocalDate(
-                JobParametersKey.END_DATE,
+                Common.JOB_PARAMETERS_END_DATE,
                 LocalDate.parse("2023-12-31")
             )
             .toJobParameters()

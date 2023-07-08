@@ -16,13 +16,13 @@ open class ProductMonthlyAggregationListener(
     private lateinit var endMonth: String
 
     override fun beforeStep(stepExecution: StepExecution) {
-        if (!stepExecution.executionContext.containsKey(JobParametersKey.START_DATE) ||
-            !stepExecution.executionContext.containsKey(JobParametersKey.END_DATE)) {
+        if (!stepExecution.executionContext.containsKey(Common.STEP_EXECUTION_START_DATE) ||
+            !stepExecution.executionContext.containsKey(Common.STEP_EXECUTION_END_DATE)) {
             throw IllegalArgumentException("start date or end date is not provided in job parameters")
         }
 
-        startMonth = stepExecution.executionContext[JobParametersKey.START_DATE].toString().substring(0, 7)
-        endMonth = stepExecution.executionContext[JobParametersKey.END_DATE].toString().substring(0, 7)
+        startMonth = stepExecution.executionContext[Common.STEP_EXECUTION_START_DATE].toString().substring(0, 7)
+        endMonth = stepExecution.executionContext[Common.STEP_EXECUTION_END_DATE].toString().substring(0, 7)
 
         ProductMonthlyKeyUtils.productMonthlyKeysBetween(startMonth, endMonth)
             .forEach {

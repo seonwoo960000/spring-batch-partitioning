@@ -5,6 +5,7 @@ import com.devvy.springbatchpartitioning.repository.ProductMonthlyRepository
 import jakarta.persistence.EntityManagerFactory
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
+import org.springframework.batch.core.configuration.annotation.JobScope
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.partition.support.TaskExecutorPartitionHandler
@@ -59,6 +60,7 @@ class ProductMonthlyAggregationJobConfiguration(
         return executor
     }
 
+    @JobScope
     @Bean("productMonthlyAggregationStep.manager")
     fun productMonthlyAggregationStepManager(
         @Qualifier("productMonthlyAggregationPartitioner") partitioner: ProductMonthlyAggregationPartitioner,
@@ -106,15 +108,15 @@ class ProductMonthlyAggregationJobConfiguration(
     @StepScope
     @Bean("productMonthlyAggregationReader")
     fun productMonthlyAggregationReader(
-        @Value("#{stepExecutionContext[${JobParametersKey.START_DATE}]}")
-        startDate: LocalDate,
-        @Value("#{stepExecutionContext[${JobParametersKey.END_DATE}]}")
-        endDate: LocalDate
+        @Value("#{stepExecutionContext[${Common.STEP_EXECUTION_START_DATE}]}")
+        stepExecutionStartDate: LocalDate,
+        @Value("#{stepExecutionContext[${Common.STEP_EXECUTION_END_DATE}]}")
+        stepExecutionEndDate: LocalDate
     ): JpaPagingItemReader<Product> {
         return ProductMonthlyAggregationReaderFactory(
             entityManagerFactory,
-            startDate,
-            endDate,
+            stepExecutionStartDate,
+            stepExecutionEndDate,
             chunkSize.toInt()
         )
             .productMonthlyAggregationReader()
@@ -132,12 +134,12 @@ class ProductMonthlyAggregationJobConfiguration(
         return ProductMonthlyAggregationListener(productMonthlyRepository)
     }
 
-    @StepScope
+    @JobScope
     @Bean("productMonthlyAggregationPartitioner")
     fun productMonthlyAggregationPartitioner(
-        @Value("#{jobParameters[${JobParametersKey.START_DATE}]}")
+        @Value("#{jobParameters[${Common.JOB_PARAMETERS_START_DATE}]}")
         startDate: LocalDate,
-        @Value("#{jobParameters[${JobParametersKey.END_DATE}]}")
+        @Value("#{jobParameters[${Common.JOB_PARAMETERS_END_DATE}]}")
         endDate: LocalDate
     ): ProductMonthlyAggregationPartitioner {
         return ProductMonthlyAggregationPartitioner(startDate, endDate)

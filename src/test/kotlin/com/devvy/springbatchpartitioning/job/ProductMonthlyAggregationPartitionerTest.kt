@@ -11,8 +11,8 @@ class ProductMonthlyAggregationPartitionerTest {
     fun testPartitionDates() {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val result = ProductMonthlyAggregationPartitioner(
-            startDate = LocalDate.parse("2023-01-01", formatter),
-            endDate = LocalDate.parse("2023-12-31", formatter)
+            jobParametersStartDate = LocalDate.parse("2023-01-01", formatter),
+            jobParametersEndDate = LocalDate.parse("2023-12-31", formatter)
         ).partitionDates()
         assertEquals(12, result.size)
         assertEquals("2023-01-01", result[0].first)
