@@ -6,6 +6,7 @@ import mu.KotlinLogging
 import org.springframework.batch.core.ExitStatus
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.StepExecutionListener
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private val logger = KotlinLogging.logger {}
@@ -17,19 +18,19 @@ open class ProductMonthlyAggregationListener(
     private lateinit var endMonth: String
 
     override fun beforeStep(stepExecution: StepExecution) {
-        val startDateParam = stepExecution.jobExecution.jobParameters.getLocalDate(Common.JOB_PARAMETERS_START_DATE)
-        val endDateParam = stepExecution.jobExecution.jobParameters.getLocalDate(Common.JOB_PARAMETERS_END_DATE)
+        val startDateParam = stepExecution.jobExecution.jobParameters.getString(Common.JOB_PARAMETERS_START_DATE)
+        val endDateParam = stepExecution.jobExecution.jobParameters.getString(Common.JOB_PARAMETERS_END_DATE)
         if (startDateParam == null || endDateParam == null) {
             throw IllegalArgumentException("start date or end date is not provided in job parameters")
         }
 
         val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
-        startMonth = startDateParam.format(dateTimeFormatter)
-        endMonth = endDateParam.format(dateTimeFormatter)
+        startMonth = LocalDate.parse(startDateParam).format(dateTimeFormatter)
+        endMonth = LocalDate.parse(endDateParam).format(dateTimeFormatter)
 
         ProductMonthlyKeyUtils.productMonthlyKeysBetween(startMonth, endMonth)
             .forEach {
-                stepExecution.executionContext.put(it, ProductMonthly.default(startMonth))
+                stepExecution.executionContext.put(it, ProductMonthly.default(it))
             }
     }
 

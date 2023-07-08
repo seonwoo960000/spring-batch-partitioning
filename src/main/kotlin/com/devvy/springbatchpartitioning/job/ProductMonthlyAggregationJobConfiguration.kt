@@ -31,9 +31,6 @@ class ProductMonthlyAggregationJobConfiguration(
     @Value("\${spring.batch.job.chunk-size:1000}")
     lateinit var chunkSize: Integer
 
-    @Value("\${spring.batch.job.pool-size:6}")
-    lateinit var poolSize: Integer
-
     @Bean("productMonthlyAggregationJob")
     fun productMonthlyAggregationJob(
         @Qualifier("productMonthlyAggregationStep") productMonthlyAggregationStep: Step

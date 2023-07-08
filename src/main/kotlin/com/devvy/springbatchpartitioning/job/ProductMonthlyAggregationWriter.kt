@@ -34,9 +34,6 @@ open class ProductMonthlyAggregationWriter : ItemWriter<Product> {
 
     @AfterStep
     fun afterStep(stepExecution: StepExecution): ExitStatus {
-        if (productMonthlies.keys.size > 1) {
-            logger.warn { "productMonthlies size is greater than 1. Check your partition configuration." }
-        }
         productMonthlies.keys.forEach {
             stepExecution.executionContext.put(it, productMonthlies[it])
         }
