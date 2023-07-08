@@ -13,13 +13,12 @@ open class ProductMonthlyAggregationPartitioner(
 ) : Partitioner {
     override fun partition(gridSize: Int): MutableMap<String, ExecutionContext> {
         val partitionedExecutionContext = mutableMapOf<String, ExecutionContext>()
-        partitionDates()
-            .forEachIndexed { index, partition ->
-                val executionContext = ExecutionContext()
-                executionContext.putString(START_DATE, partition.first)
-                executionContext.putString(END_DATE, partition.second)
-                partitionedExecutionContext["partition-$index"] = executionContext
-            }
+        partitionDates().forEachIndexed { index, partition ->
+            val executionContext = ExecutionContext()
+            executionContext.putString(START_DATE, partition.first)
+            executionContext.putString(END_DATE, partition.second)
+            partitionedExecutionContext["partition-$index"] = executionContext
+        }
         return partitionedExecutionContext
     }
 

@@ -10,15 +10,14 @@ class ProductMonthlyKeyUtils {
             return PRODUCT_MONTHLY_KEY + yearMonth
         }
 
-        fun productMonthlyKeys(startMonth: String, endMonth: String): List<String> {
-            var start = YearMonth.parse(startMonth)
-            val end = YearMonth.parse(endMonth)
+        fun productMonthlyKeysBetween(start: String, end: String): List<String> {
+            var startMonth = YearMonth.parse(start)
+            val endMonth = YearMonth.parse(end)
 
             val result = mutableListOf<String>()
-            while (!start.isAfter(end)) {
-
-                result.add(PRODUCT_MONTHLY_KEY + start.toString())
-                start = start.plusMonths(1)
+            while (!startMonth.isAfter(endMonth)) {
+                result.add(PRODUCT_MONTHLY_KEY + startMonth.toString())
+                startMonth = startMonth.plusMonths(1)
             }
 
             return result

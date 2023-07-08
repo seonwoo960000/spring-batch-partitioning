@@ -8,7 +8,7 @@ class ProductMonthlyKeyUtilsTest {
 
     @Test
     fun `productMonthlyKeys test`() {
-        val result = ProductMonthlyKeyUtils.productMonthlyKeys("2023-01", "2023-06")
+        val result = ProductMonthlyKeyUtils.productMonthlyKeysBetween("2023-01", "2023-06")
         assertThat(result.size).isEqualTo(6)
         assertThat(result[0]).isEqualTo(PRODUCT_MONTHLY_KEY + "2023-01")
         assertThat(result[1]).isEqualTo(PRODUCT_MONTHLY_KEY + "2023-02")

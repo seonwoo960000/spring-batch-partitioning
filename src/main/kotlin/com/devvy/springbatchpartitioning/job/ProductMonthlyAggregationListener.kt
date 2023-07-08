@@ -16,19 +16,15 @@ open class ProductMonthlyAggregationListener(
     private lateinit var endMonth: String
 
     override fun beforeStep(stepExecution: StepExecution) {
-        startMonth =
-            stepExecution.executionContext[JobParametersKey.START_DATE].toString().substring(0, 7)
-        endMonth =
-            stepExecution.executionContext[JobParametersKey.END_DATE].toString().substring(0, 7)
-        if (startMonth == null || endMonth == null) {
-            throw IllegalArgumentException("Null month")
+        if (!stepExecution.executionContext.containsKey(JobParametersKey.START_DATE) ||
+            !stepExecution.executionContext.containsKey(JobParametersKey.END_DATE)) {
+            throw IllegalArgumentException("start date or end date is not provided in job parameters")
         }
 
-        if (startMonth != endMonth) {
-            throw IllegalArgumentException("Start month and end month are not equal. startMonth: $startMonth, endMonth: $endMonth")
-        }
+        startMonth = stepExecution.executionContext[JobParametersKey.START_DATE].toString().substring(0, 7)
+        endMonth = stepExecution.executionContext[JobParametersKey.END_DATE].toString().substring(0, 7)
 
-        ProductMonthlyKeyUtils.productMonthlyKeys(startMonth, endMonth)
+        ProductMonthlyKeyUtils.productMonthlyKeysBetween(startMonth, endMonth)
             .forEach {
                 stepExecution.executionContext.put(it, ProductMonthly.default(startMonth))
             }
@@ -36,7 +32,7 @@ open class ProductMonthlyAggregationListener(
 
     override fun afterStep(stepExecution: StepExecution): ExitStatus? {
         if (stepExecution.exitStatus.equals(ExitStatus.COMPLETED)) {
-            ProductMonthlyKeyUtils.productMonthlyKeys(startMonth, endMonth)
+            ProductMonthlyKeyUtils.productMonthlyKeysBetween(startMonth, endMonth)
                 .forEach {
                     productMonthlyRepository.save(stepExecution.executionContext[it]!! as ProductMonthly)
                 }

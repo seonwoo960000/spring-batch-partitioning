@@ -23,9 +23,10 @@ class ProductMonthly(
     }
 
     fun add(productMonthly: Product) {
-        if (this.month != productMonthly.date.substring(0, 7)) {
+        val month = productMonthly.date.substring(0, 7)
+        if (this.month != month) {
             // @formatter:off
-            throw IllegalArgumentException("Different month: ${this.month} != ${productMonthly.date.substring(0, 7)}")
+            throw IllegalArgumentException("Different month: ${this.month} != $month")
         }
         this.price += productMonthly.price
     }

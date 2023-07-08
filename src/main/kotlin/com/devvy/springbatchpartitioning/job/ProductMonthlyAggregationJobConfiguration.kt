@@ -42,8 +42,9 @@ class ProductMonthlyAggregationJobConfiguration(
         @Qualifier("productMonthlyAggregationStep.manager") productMonthlyAggregationStepManager: Step
     ): Job {
         return JobBuilder("productMonthlyAggregationJob", jobRepository)
-//            .incrementer(CustomRunIdIncrementer())
             .start(productMonthlyAggregationStepManager)
+            // comment below code to prevent running jobs with same jobParameters multiple times
+            .incrementer(UniqueRunIdIncrementer())
             .build()
     }
 
