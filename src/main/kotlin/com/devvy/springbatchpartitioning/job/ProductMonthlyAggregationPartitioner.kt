@@ -30,7 +30,7 @@ open class ProductMonthlyAggregationPartitioner(
         var partitionedDates = mutableListOf<Pair<String, String>>()
         while (current.isBefore(end) || current == end) {
             val yearMonth = YearMonth.from(current)
-            val partitionStartDate = yearMonth.atDay(1)
+            val partitionStartDate = maxOf(start, yearMonth.atDay(1))
             val partitionEndDate = yearMonth.atEndOfMonth()
 
             partitionedDates.add(Pair(partitionStartDate.toString(), partitionEndDate.toString()))
