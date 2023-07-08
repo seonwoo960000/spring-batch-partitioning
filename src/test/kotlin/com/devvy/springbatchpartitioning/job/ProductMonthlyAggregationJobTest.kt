@@ -19,11 +19,10 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.jdbc.Sql
-import java.time.LocalDate
 
 @SpringBootTest
 @SpringBatchTest
-@TestPropertySource(properties = ["spring.batch.job.chunk-size=10", "spring.batch.job.pool-size=3"])
+@TestPropertySource(properties = ["spring.batch.job.chunk-size=100", "spring.batch.job.pool-size=3"])
 @Sql("classpath:/sql/dml.sql")
 class ProductMonthlyAggregationJobTest(
     @Qualifier("productMonthlyAggregationJob")
@@ -48,14 +47,8 @@ class ProductMonthlyAggregationJobTest(
     @Test
     fun `productMonthlyAggregationJob test with default settings`() {
         val jobParameters = JobParametersBuilder()
-            .addLocalDate(
-                Common.JOB_PARAMETERS_START_DATE,
-                LocalDate.parse("2023-01-01")
-            )
-            .addLocalDate(
-                Common.JOB_PARAMETERS_END_DATE,
-                LocalDate.parse("2023-12-31")
-            )
+            .addString(Common.JOB_PARAMETERS_START_DATE, "2023-01-01")
+            .addString(Common.JOB_PARAMETERS_END_DATE, "2023-12-31")
             .toJobParameters()
         val jobExecution = jobLauncherTestUtils.launchJob(jobParameters)
         assertThat(jobExecution.exitStatus).isEqualTo(ExitStatus.COMPLETED)
